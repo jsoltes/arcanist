@@ -36,13 +36,15 @@ final class PytestTestEngine extends ArcanistUnitTestEngine {
   public function buildTestFuture($junit_tmp, $cover_tmp) {
     $paths = $this->getPaths();
 
-    $cmd_line = csprintf('py.test --junit-xml=%s', $junit_tmp);
+    $cmd_line = csprintf('pytest */*/unit/ --junit-xml=%s', $junit_tmp);
 
     if ($this->getEnableCoverage() !== false) {
       $cmd_line = csprintf(
-        'coverage run --source %s -m %C',
+        '%C --cov-config=.coveragerc --cov=%s --cov-report xml:%s',
+        $cmd_line,
         $this->projectRoot,
-        $cmd_line);
+        $cover_tmp
+        );
     }
 
     return new ExecFuture('%C', $cmd_line);
@@ -82,7 +84,7 @@ final class PytestTestEngine extends ArcanistUnitTestEngine {
       $relative_path = explode('.', $class->getAttribute('filename'));
       array_pop($relative_path);
       $relative_path = implode('/', $relative_path);
-
+      
       // first we check if the path is a directory (a Python package), if it is
       // set relative and absolute paths to have __init__.py at the end.
       $absolute_path = Filesystem::resolvePath($relative_path);
@@ -102,7 +104,7 @@ final class PytestTestEngine extends ArcanistUnitTestEngine {
       if (!file_exists($absolute_path)) {
         continue;
       }
-
+      
       if (!in_array($relative_path, $paths)) {
         continue;
       }
@@ -135,7 +137,7 @@ final class PytestTestEngine extends ArcanistUnitTestEngine {
           $coverage .= 'N';
         }
       }
-
+      
       $reports[$relative_path] = $coverage;
     }
 
