@@ -85,14 +85,16 @@ final class ArcanistXUnitTestResultParser extends Phobject {
 
         $user_data .= implode("\n", $messages)."\n";
       }
+      
+      if ($status != ArcanistUnitTestResult::RESULT_PASS) {
+        $result = new ArcanistUnitTestResult();
+        $result->setName($classname.'.'.$name);
+        $result->setResult($status);
+        $result->setDuration((float)$time);
+        $result->setUserData($user_data);
 
-      $result = new ArcanistUnitTestResult();
-      $result->setName($classname.'.'.$name);
-      $result->setResult($status);
-      $result->setDuration((float)$time);
-      $result->setUserData($user_data);
-
-      $results[] = $result;
+        $results[] = $result;
+      }
     }
 
     return $results;
