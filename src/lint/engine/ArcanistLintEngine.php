@@ -189,26 +189,6 @@ abstract class ArcanistLintEngine extends Phobject {
       throw new ArcanistNoEffectException(pht('No paths are lintable.'));
     }
 
-    $versions = array($this->getCacheVersion());
-
-    foreach ($linters as $linter) {
-      $version = get_class($linter).':'.$linter->getCacheVersion();
-
-      $symbols = id(new PhutilSymbolLoader())
-        ->setType('class')
-        ->setName(get_class($linter))
-        ->selectSymbolsWithoutLoading();
-      $symbol = idx($symbols, 'class$'.get_class($linter));
-      if ($symbol) {
-        $version .= ':'.md5_file(
-          phutil_get_library_root($symbol['library']).'/'.$symbol['where']);
-      }
-
-      $versions[] = $version;
-    }
-
-    $this->cacheVersion = crc32(implode("\n", $versions));
-
     $runnable = $this->getRunnableLinters($linters);
 
     $this->stopped = array();
@@ -232,6 +212,25 @@ abstract class ArcanistLintEngine extends Phobject {
     }
 
     if ($this->cachedResults) {
+      $versions = array($this->getCacheVersion());
+
+      foreach ($linters as $linter) {
+        $version = get_class($linter).':'.$linter->getCacheVersion();
+
+        $symbols = id(new PhutilSymbolLoader())
+          ->setType('class')
+          ->setName(get_class($linter))
+          ->selectSymbolsWithoutLoading();
+        $symbol = idx($symbols, 'class$'.get_class($linter));
+        if ($symbol) {
+          $version .= ':'.md5_file(
+            phutil_get_library_root($symbol['library']).'/'.$symbol['where']);
+        }
+
+        $versions[] = $version;
+      }
+
+    $this->cacheVersion = crc32(implode("\n", $versions));
       foreach ($this->cachedResults as $path => $messages) {
         $messages = idx($messages, $this->cacheVersion, array());
         $repository_version = idx($messages, 'repository_version');
